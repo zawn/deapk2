@@ -13,7 +13,12 @@ from python.keyinput.action_text    import Text
 from python.keyinput.window_mgr     import WindowMgr
 
 ISOTIMEFORMAT="%Y-%m-%d %X"
-currentDir  =   os.path.abspath(sys.path[0]);
+
+# determine if application is a script file or frozen exe
+if getattr(sys, 'frozen', False):
+    currentDir = os.path.dirname(sys.executable)
+elif __file__:
+    currentDir = os.path.dirname(__file__)
 os.chdir(currentDir)
 apktool_bat =   currentDir+"\\lib\\apktool1.5.1\\apktool.bat"
 dex2jar_bat =   currentDir+"\\lib\\dex2jar-0.0.9.13\\d2j-dex2jar.bat"
