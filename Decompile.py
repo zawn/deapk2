@@ -13,10 +13,12 @@ from python.keyinput.action_text    import Text
 from python.keyinput.window_mgr     import WindowMgr
 
 ISOTIMEFORMAT="%Y-%m-%d %X"
-apktool_bat="lib\\apktool1.5.1\\apktool.bat"
-dex2jar_bat="lib\\dex2jar-0.0.9.13\\d2j-dex2jar.bat"
-jd_gui_exe="lib\\jd-gui-0.3.5\\jd-gui.exe"
-apk_dir="apk"
+currentDir  =   os.path.abspath(sys.path[0]);
+os.chdir(currentDir)
+apktool_bat =   currentDir+"\\lib\\apktool1.5.1\\apktool.bat"
+dex2jar_bat =   currentDir+"\\lib\\dex2jar-0.0.9.13\\d2j-dex2jar.bat"
+jd_gui_exe  =   currentDir+"\\lib\\jd-gui-0.3.5\\jd-gui.exe"
+apk_dir     =   currentDir+"\\apk"
 
 
 def execCmd(cmd):
@@ -86,7 +88,6 @@ def decompileApk(distdir,apkfilename,logdir):
 def main():
     starttime =  time.strftime( ISOTIMEFORMAT, time.localtime() )
     print("开始时间:"+starttime+"\n")
-    currentDir =  os.getcwd()
     apks = getAPK()
     if len(apks)>0 :        
 ##       print("上级目录:"+os.path.abspath(os.pardir )+"\n")
