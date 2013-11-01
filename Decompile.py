@@ -6,6 +6,11 @@ import re
 import zipfile
 import time
 import shutil
+import subprocess
+import sys
+from python.keyinput.action_key     import Key
+from python.keyinput.action_text    import Text
+from python.keyinput.window_mgr     import WindowMgr
 
 ISOTIMEFORMAT="%Y-%m-%d %X"
 apktool_bat="lib\\apktool1.5.1\\apktool.bat"
@@ -29,7 +34,16 @@ def getAPK():
         sufix = os.path.splitext(apkfile)[1]
         if sufix == ".apk":
             results.append(apkfile)
-    return results  
+    return results
+
+def WaitAndFore(title):
+    w = WindowMgr()     
+    while w._handle == None:
+        w.find_window_wildcard(title+".*")
+        time.sleep(0.1)
+        sys.stdout.write('.')
+    print w._handle    
+    w.set_foreground()
     
 def decompileApk(distdir,apkfilename,logdir):
     distApkDir = distdir+ os.sep +os.path.splitext(apkfilename)[0]
@@ -41,9 +55,33 @@ def decompileApk(distdir,apkfilename,logdir):
     text =  execCmd(dex2jar_bat + " -f "+"\""+ distApkDir+ os.sep + "classes.dex"+"\""+" -o "+"\""+distApkDir+ os.sep +"classes.jar"+"\""+" -e "+"\""+distApkDir+ os.sep +"classes_error.zip"+"\"")
     for f in text:
         print f
-    text =  execCmd(jd_gui_exe + " "+"\""+distApkDir+ os.sep +"classes.jar"+"\"")
-    for f in text:
-        print f
+    jdcmd = jd_gui_exe + " "+"\""+distApkDir+ os.sep +"classes.jar"+"\""
+    #text =  execCmd(jdcmd)
+    setText(distApkDir+ os.sep)
+    subprocess.Popen(jdcmd) # Success!
+    WaitAndFore("Java Decompiler")    
+    Key("a-f, s").execute()    
+    WaitAndFore("Save")
+    time.sleep(0.5)
+    action = Key("f4/10:2, c-a, delete") + Key("c-v/10")
+    action.execute()
+    #+ Key("enter/5:4,y")
+    w = WindowMgr()     
+    while w._handle == None:
+        Key("enter/5").execute()
+        time.sleep(0.1)
+        w.find_window_wildcard("Save All Sources"+".*")
+        sys.stdout.write('.')
+    print w._handle
+    w = WindowMgr()
+    w.find_window_wildcard("Save All Sources"+".*")
+    while w._handle != None:
+        w.find_window_wildcard("Save All Sources"+".*")
+        time.sleep(0.1)
+        sys.stdout.write('.')
+    print ""
+    print "保存完毕"
+  #  ListWindows()
 		
 def main():
     starttime =  time.strftime( ISOTIMEFORMAT, time.localtime() )
@@ -73,5 +111,23 @@ def main():
     else :
         print("没有找到任何APK文件在目录:"+os.path.abspath(currentDir)+ os.sep  + apk_dir +"\n")
     raw_input("Press any key to exit")
-main()
+
+import win32clipboard as w  
+import win32con 
+
+def getText():  
+    w.OpenClipboard()  
+    d = w.GetClipboardData(win32con.CF_TEXT)  
+    w.CloseClipboard()  
+    return d 
+
+def setText(aString):  
+    w.OpenClipboard()  
+    w.EmptyClipboard()  
+    w.SetClipboardData(win32con.CF_TEXT, aString)  
+    w.CloseClipboard()
+if __name__ == "__main__":
+    main()
+
+
         
