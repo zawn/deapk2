@@ -12,6 +12,7 @@ import traceback
 from python.keyinput.action_key     import Key
 from python.keyinput.action_text    import Text
 from python.keyinput.window_mgr     import WindowMgr
+from python.key_open_window     import KeyOpenWindows
 
 ISOTIMEFORMAT="%Y-%m-%d %X"
 
@@ -62,36 +63,27 @@ def decompileApk(distdir,apkfilename,logdir):
     text =  execCmd(apktool_bat + " d -s -f -b \""+ apk_dir + os.sep + apkfilename +"\" \""+distApkDir+"\"")
     for f in text:
         print f
+  #  p = subprocess.Popen(“app2.exe”,stderr = subprocess.STDOUT)
     text =  execCmd(dex2jar_bat + " -f "+"\""+ distApkDir+ os.sep + "classes.dex"+"\""+" -o "+"\""+distApkDir+ os.sep +"classes.jar"+"\""+" -e "+"\""+distApkDir+ os.sep +"classes_error.zip"+"\"")
     for f in text:
         print f
     jdcmd = jd_gui_exe + " "+"\""+distApkDir+ os.sep +"classes.jar"+"\""
-    print "正在打开Java Decompiler"
+    print "正在进行:打开Java Decompiler"
     subprocess.Popen(jdcmd) # Success!
-    WaitAndFore("Java Decompiler")    
-    Key("a-f, s").execute()
-    print "\n正在打开另存为对话框"
-    WaitAndFore("Save")
-    setText("None")
-    print "\n确认另存为对话框状态"
-    while getText() != "classes.src.zip":
-        WaitAndFore("Save")
-        Key("a-t, a-n, c-a,c-c/2").execute()
-        sys.stdout.write('.')
+    WaitAndFore("Java Decompiler")
+    def verify1():
         time.sleep(0.1)
-    setText(distApkDir+ os.sep)
-    print "\n正在另存为"+distApkDir+ os.sep+"src.zip"
-    (Key("a-t, a-n, c-a, delete") + Text("src.zip")).execute()    
+        return getText() == "classes.src.zip"
+    k1 = KeyOpenWindows("Save",Key("a-t, a-n, c-a,c-c"),verify1,5,1,"确认另存为对话框")
+    k2 = KeyOpenWindows("Java Decompiler",Key("a-f, s"),k1.openwindows,5,1,"打开另存为对话框")
+    k2.openwindows()
     time.sleep(0.1)
-    Key("a-t, a-d, c-a, delete,c-v,a-s,y").execute()
-    w = WindowMgr()
-    i=50
-    while w._handle == None:
-        #Key("enter").execute()
-        time.sleep(0.1)
-        i = i-1
-        w.find_window_wildcard("Save All Sources"+".*")
-        sys.stdout.write('.')
+    setText(distApkDir+ os.sep)
+    #print "\n正在另存为"+distApkDir+ os.sep+"src.zip"
+    k1 = KeyOpenWindows("Save",Key("a-t, a-n, c-a, delete") + Text("src.zip"),"Save",5,1,"重命名为文件为src.zip")
+    k1.openwindows()
+    k2 = KeyOpenWindows("Save",Key("a-t, a-d, c-a, delete,c-v,a-s,y"),"Save All Sources",5,1,"修改文件路径并保存")
+    k2.openwindows()
     print "\nJava Decompiler 正在保存源码,请勿取消! "
     w = WindowMgr()
     w.find_window_wildcard("Save All Sources"+".*")
