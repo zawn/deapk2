@@ -14,7 +14,7 @@ import threading
 from python.keyinput.action_key     import Key
 from python.keyinput.action_text    import Text
 from python.keyinput.window_mgr     import WindowMgr
-from python.key_open_window     import KeyOpenWindows
+from python.key_open_window         import KeyOpenWindows
 
 ISOTIMEFORMAT="%Y-%m-%d %X"
 
@@ -24,9 +24,9 @@ if getattr(sys, 'frozen', False):
 else:
     currentDir = sys.path[0]
 os.chdir(currentDir)
-apktool_bat =   currentDir+"\\lib\\apktool1.5.1\\apktool.bat"
-dex2jar_bat =   currentDir+"\\lib\\dex2jar-0.0.9.13\\d2j-dex2jar.bat"
-jd_gui_exe  =   currentDir+"\\lib\\jd-gui-0.3.5\\jd-gui.exe"
+apktool_bat =   currentDir+"\\lib\\apktool-2.0.0rc4\\apktool.bat"
+dex2jar_bat =   currentDir+"\\lib\\dex2jar-0.0.9.15\\d2j-dex2jar.bat"
+jd_gui_exe  =   currentDir+"\\lib\\jd-gui-0.3.6\\jd-gui.exe"
 apk_dir     =   currentDir+"\\apk"
 logdir      =   currentDir+"\\dist"
 distdir     =   currentDir+"\\dist"
@@ -46,13 +46,15 @@ def execCmd(cmd):
     return text
 
 def getAPK():
-    files = os.listdir(apk_dir);
     results = []
-##    print len(files)
-    for apkfile in files:
-        sufix = os.path.splitext(apkfile)[1]
-        if sufix == ".apk":
-            results.append(apkfile)
+    if os.path.exists(distdir):
+        files = os.listdir(apk_dir);
+        
+##      print len(files)
+        for apkfile in files:
+             sufix = os.path.splitext(apkfile)[1]
+             if sufix == ".apk":
+                 results.append(apkfile)
     return results
 
 def WaitAndFore(title):
@@ -136,7 +138,7 @@ def decompileApk(distdir,apkfilename,logdir):
     distApkDir = distdir+ os.sep +os.path.splitext(apkfilename)[0]
     print "Apk文件:"+apkfilename
     print "结果目录:"+distApkDir
-    cmdapktool = apktool_bat + " d -s -f -b \""+ apk_dir + os.sep + apkfilename +"\" \""+distApkDir+"\""
+    cmdapktool = apktool_bat + " d -s -f \""+ apk_dir + os.sep + apkfilename +"\" -o \""+distApkDir+"\""
     print "正在进行:"+cmdapktool
     # text =  execCmd(cmdapktool)
     subProcess(cmdapktool)
@@ -145,6 +147,7 @@ def decompileApk(distdir,apkfilename,logdir):
     # text =  execCmd(cmddex2jar)
     subProcess(cmddex2jar)
     jdcmd = jd_gui_exe + " "+"\""+distApkDir+ os.sep +"classes.jar"+"\""
+    print jdcmd
     print "正在进行:打开Java Decompiler"
     subprocess.Popen(jdcmd) # Success!
     setText("")
@@ -175,6 +178,7 @@ def decompileApk(distdir,apkfilename,logdir):
         else:
             abc = abc - 1
     print "\n保存完毕,正在退出Java Decompiler"
+    time.sleep(0.5)
     w = WindowMgr()
     w.find_window_wildcard("Java Decompiler"+".*")
     if w._handle != None:
@@ -187,9 +191,7 @@ def decompileApk(distdir,apkfilename,logdir):
     #zipFile.extractall(distApkDir+ os.sep+"src")
     startWait()
     for f in zipFile.namelist():
-        if f.endswith('/'):
-            os.makedirs(distApkDir+ os.sep+"src"+os.sep +f)
-        else:
+        if not f.endswith('/'):
             try:
                 zipFile.extract(f,distApkDir+ os.sep+"src")
             except IOError,e:
@@ -204,21 +206,22 @@ def main(args):
     wt.start()
     starttime = time.time()
     print("开始时间:"+time.strftime( ISOTIMEFORMAT, time.localtime(starttime) )+"\n")
-    apks = getAPK()
+    print("当前目录:"+currentDir)
+    if len(args) == 2:
+        global apk_dir
+        global logdir
+        global distdir
+        apk_dir = os.path.dirname(args[1])
+        apks = [os.path.basename(args[1])]
+        logdir      =   apk_dir+"\\dist"
+        distdir     =   apk_dir+"\\dist"
+        print("APK文件:"+args[1])
+    else:
+        apks = getAPK()
+        print("APK目录:"+apk_dir)
     if len(apks)>0 :        
 ##       print("上级目录:"+os.path.abspath(os.pardir )+"\n")
-        print("当前目录:"+currentDir)
-        if len(args) == 2:
-            global apk_dir
-            global logdir
-            global distdir
-            apk_dir = os.path.dirname(args[1])
-            apks = [os.path.basename(args[1])]
-            logdir      =   apk_dir+"\\dist"
-            distdir     =   apk_dir+"\\dist"
-            print("APK文件:"+args[1])
-        else:
-            print("APK目录:"+apk_dir)
+        
         print("结果目录:"+distdir)
         if os.path.exists(distdir):
             startWait()
