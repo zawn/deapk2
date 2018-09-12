@@ -2,3 +2,4 @@ syntax: glob
 dist*
 apk/*.apk
 lib/jd-gui-0.3.5/jd-gui.cfg
+*/.git
